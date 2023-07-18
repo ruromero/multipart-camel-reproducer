@@ -1,52 +1,53 @@
 # multipart-camel-reproducer
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
+This is a reproducer for [CAMEL-19568](https://issues.apache.org/jira/browse/CAMEL-19568)
 
-If you want to learn more about Quarkus, please visit its website: https://quarkus.io/ .
+## Run the application
 
-## Running the application in dev mode
+This is a Quarkus Camel application, to start it you can just:
 
-You can run your application in dev mode that enables live coding using:
-```shell script
-mvn compile quarkus:dev
+```bash
+mvn quarkus:dev
 ```
 
-> **_NOTE:_**  Quarkus now ships with a Dev UI, which is available in dev mode only at http://localhost:8080/q/dev/.
+The application will start a REST endpoint `GET /` that will return a `multipart/mixed` response containing a text 
+and an attached HTML.
 
-## Packaging and running the application
-
-The application can be packaged using:
-```shell script
-mvn package
 ```
-It produces the `quarkus-run.jar` file in the `target/quarkus-app/` directory.
-Be aware that it’s not an _über-jar_ as the dependencies are copied into the `target/quarkus-app/lib/` directory.
+------=_Part_0_1584025906.1689674736129
+Content-Type: application/octet-stream
+Content-Transfer-Encoding: binary
 
-The application is now runnable using `java -jar target/quarkus-app/quarkus-run.jar`.
+Hello Camel
+------=_Part_0_1584025906.1689674736129
+Content-Type: text/html
+Content-Transfer-Encoding: 8bit
+Content-Disposition: attachment; filename=report.html
 
-If you want to build an _über-jar_, execute the following command:
-```shell script
-mvn package -Dquarkus.package.type=uber-jar
-```
-
-The application, packaged as an _über-jar_, is now runnable using `java -jar target/*-runner.jar`.
-
-## Creating a native executable
-
-You can create a native executable using: 
-```shell script
-mvn package -Pnative
+<html><body>Hello Camel</body></html>
+------=_Part_0_1584025906.1689674736129--
 ```
 
-Or, if you don't have GraalVM installed, you can run the native executable build in a container using: 
-```shell script
-mvn package -Pnative -Dquarkus.native.container-build=true
+After starting, a timer will make one HTTP request to that endpoint and log the response.
+
+## Configuring the application
+
+The default behaviour is to use HTTP/2 which is the failing scenario. In order to use HTTP/1.1 you can start the application with `-Dversion=1.1`
+
+```
+mvn quarkus:dev -Dversion=1.1
 ```
 
-You can then execute your native executable with: `./target/multipart-camel-reproducer-1.0.0-SNAPSHOT-runner`
+## Build the application
 
-If you want to learn more about building native executables, please consult https://quarkus.io/guides/maven-tooling.
+As a normal Maven application just use the `package` target.
 
-## Related Guides
+```bash
+mvn clean package
+```
 
-- Camel Mail ([guide](https://camel.apache.org/camel-quarkus/latest/reference/extensions/mail.html)): Send and receive emails using imap, pop3 and smtp protocols
+Then you can run the built application normally.
+
+```bash
+java -Dversion=1.1 -jar target/quarkus-app/quarkus-run.jar
+```
